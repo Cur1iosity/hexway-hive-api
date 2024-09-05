@@ -2,7 +2,7 @@
 [![PyPI](https://img.shields.io/pypi/v/hexway-hive-api)](https://pypi.org/project/hexway-hive-api/)
 [![Hexway](https://img.shields.io/badge/hexway-visit%20site-blue)](https://hexway.io)
 
-# HivePy
+# Hexway Hive API
 
 Unofficial flexible library for [HexWay Hive](https://hexway.io/hive/) Rest API.
 
@@ -10,7 +10,7 @@ Unofficial flexible library for [HexWay Hive](https://hexway.io/hive/) Rest API.
 
 ## Installation
 ```bash
-TBD
+pip install hexway-hive-api
 ```
 
 ## Dependencies
@@ -27,25 +27,20 @@ from hexway_hive_api import RestClient
 def main() -> None:
     auth = {
         'server': 'https://demohive.hexway.io/',
-        'username': 'cur1',
-        'password': '',
+        'username': 'someuser',
+        'password': 'somepassword',
         'proxies': {
             'http': 'http://127.0.0.1:8080',
             'https': 'http://127.0.0.1:8080',
         }
     }
-    client = RestClient(
-        base_url="https://hive.example.com",
-        username="{username}",
-        password="{password",
-    )
+    client = RestClient(**auth)
 
     client.authenticate()
     projects: list = client.get_projects().get('items')
     
-    project_data = client.get_p
     
-    client.update_project(project_id=1,)
+    client.update_project(project_id=1, fields={'name': 'New Project Name'})
     
 if __name__ == "__main__":
     main()
