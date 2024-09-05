@@ -1,4 +1,4 @@
-[![Run Tests](https://github.com/Cur1iosity/hexway-hive-api/actions/workflows/run-tests.yml/badge.svg)](https://github.com/Cur1iosity/hivepy/actions/workflows/run-tests.yml)
+[![Run Tests](https://github.com/Cur1iosity/hexway-hive-api/actions/workflows/run-tests.yml/badge.svg)](https://github.com/Cur1iosity/hexway-hive-api/actions/workflows/run-tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/hexway-hive-api)](https://pypi.org/project/hexway-hive-api/)
 [![Hexway](https://img.shields.io/badge/hexway-visit%20site-blue)](https://hexway.io)
 
