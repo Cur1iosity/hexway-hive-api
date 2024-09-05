@@ -95,7 +95,7 @@ class RestClient:
         """Get project by id."""
         return self.http_client.get(f'{self.api_url}/project/{project_id}')
 
-    def get_projects(self, **params) -> Dict[str, str]:
+    def get_projects(self, **params) -> Dict[str, Union[str, Dict]]:
         """Get all projects."""
         return self.http_client.post(f'{self.api_url}/project/filter', params=params)
 
