@@ -1,0 +1,91 @@
+{
+  "additionalFields": {
+    "additional_information": "SDASd",
+    "additional_params": [
+      "Detected",
+      "Exploited",
+      "Available_from_Internet"
+    ],
+    "assignment_type": "SOC",
+    "compromised_user": "",
+    "description": "asdasd",
+    "exploit_time": "2024-09-12T12:12:00.000000Z",
+    "impact": "asdasd",
+    "impact_type": [
+      "Bypass",
+      "Privilege_Escalation",
+      "Denial_of_Service"
+    ],
+    "internal_index": 1,
+    "jira_keys": "ss",
+    "killchain_part": "",
+    "proof_of_concept": "",
+    "recommendations": "ADSasd",
+    "severity": "Medium",
+    "ttp": "T12313",
+    "vulnerability_category": [
+      "Injections",
+      "Cryptographic_Failures",
+      "Broken_Access_Controls"
+    ],
+    "vulnerability_source": "Scope"
+  },
+  "assets": [
+    {
+      "hostname": null,
+      "id": 52461,
+      "ip": "127.0.0.1",
+      "optional": "Android",
+      "path": "/ahaha",
+      "port": 445,
+      "protocol": "atp",
+      "uuid": "25bb7dcf-418e-4505-8544-f5a963abac7c"
+    },
+    {
+      "hostname": "example.com",
+      "id": 52463,
+      "ip": null,
+      "optional": null,
+      "path": null,
+      "port": 228,
+      "protocol": null,
+      "uuid": "79d38300-0564-4718-97a2-662b59f33faf"
+    }
+  ],
+  "checkmarks": [],
+  "criticalityScore": null,
+  "cvssScore": 2.2,
+  "cvssVector": "CVSS:3.1/AV:P/AC:L/PR:H/UI:N/S:C/C:N/I:L/A:N",
+  "editTime": "2024-09-05T09:21:08.170310Z",
+  "files": [],
+  "hostnames": [],
+  "id": 52457,
+  "ips": [],
+  "issueSourceType": "Manual",
+  "labels": [
+    "Issue"
+  ],
+  "name": "sadas",
+  "nodeCreator": {
+    "passwordChangeRequired": false,
+    "userCreateDate": "2024-04-12T10:56:34.102854Z",
+    "userEmail": "cur1@ro.ot",
+    "userId": "5fbe9bb9-0818-44db-9b3c-00bef7b24f78",
+    "userIsAdmin": true,
+    "userIsConfirmed": true,
+    "userLastConfirmed": "2024-04-12T10:56:34.102797Z",
+    "userLogin": "cur1",
+    "userName": "RT | cur1"
+  },
+  "nodeId": null,
+  "notes": [],
+  "parentId": null,
+  "postTime": "2024-09-05T09:21:08.170310Z",
+  "probabilityScore": null,
+  "requests": [],
+  "status": "draft",
+  "syncStatus": "new",
+  "totalScore": 1,
+  "uuid": "1e5cc969-2343-4b13-af0d-8ccbb711c290",
+  "weaknessType": "CWE"
+}
