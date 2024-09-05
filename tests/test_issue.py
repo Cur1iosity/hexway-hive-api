@@ -5,7 +5,7 @@ from typing import Dict
 def test_rest_issue_deserealization(get_issue, issue_model) -> None:
     """Test deserialization hive issue json to issue model."""
     project_id = uuid.uuid4()
-    issue_dict = get_issue | {'issue_id': project_id}
+    issue_dict = get_issue | {'project_id': project_id}
     Issue = issue_model
     issue = Issue(**issue_dict)
 
