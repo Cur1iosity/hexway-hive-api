@@ -117,7 +117,7 @@ class RestClient:
         # We also need model to adapt data because of its specific serialized structure ¯\_(ツ)_/¯
         merged_data = project.pop('data', {}) | fields.pop('data', {})
         merged_project = project | fields | {'data': merged_data}
-        merged_project = Project(**merged_project | {'id': project_id}).dict()
+        merged_project = Project(**merged_project | {'id': project_id}).model_dump()
         merged_project['data'] = json.dumps(merged_project['data'])
         files = {k: (None, v) for k, v in merged_project.items()}
         return self.http_client.put(f'{self.api_url}/project/{project_id}', files=files)
@@ -133,6 +133,10 @@ class RestClient:
     def activate_project(self, project_id: Union[str, UUID]) -> Dict[str, str]:
         """Take from archive project."""
         return self.http_client.put(f'{self.api_url}/project/{project_id}/archive', json={'archived': False})
+
+    def get_statuses(self) -> List[Dict]:
+        """Get all statuses."""
+        return self.http_client.get(f'{self.api_url}/settings/issues/statuses/')
 
     @property
     def proxies(self) -> MutableMapping[str, str]:
