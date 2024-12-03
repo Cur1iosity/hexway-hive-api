@@ -1,11 +1,15 @@
 import json
-from typing import Optional, Dict, MutableMapping, List, Union
+from contextlib import contextmanager
+from typing import Optional, Dict, MutableMapping, List, Union, TYPE_CHECKING, Self
 from uuid import UUID
 
 from .rest import exceptions
 from .rest.enums import ClientState
 from .rest.http_client import HTTPClient
 from .rest.models.project import Project
+
+if TYPE_CHECKING:
+    from typing import ContextManager
 
 
 class RestClient:
@@ -46,7 +50,7 @@ class RestClient:
         if not any([username, self.username]) and not any([password, self.__password]):
             raise exceptions.RestConnectionError('You must provide username and password.')
 
-        self.http_client.update_params(**other)
+        self.http_client.update_params(**other | {'User-Agent': 'HexwayHiveAPI_Cur1Engine/0.1.5'})
 
         self.server = server or self.server
         self.api_url = api_url or self.api_url or self.make_api_url_from(self.server)
@@ -68,6 +72,23 @@ class RestClient:
 
         self.http_client.add_headers({'Cookie': f'BSESSIONID={cookie}'})
         self.state = ClientState.CONNECTED
+
+
+    def disconnect(self) -> bool:
+        """Disconnect from Hive."""
+        self.http_client.session.delete(f"{self.api_url}/session")
+        self.state = ClientState.DISCONNECTED
+        self.http_client.clear_session()
+        return True
+
+    @contextmanager
+    def connect(self, **kwargs) -> ContextManager[Self]:
+        """Context manager for connection."""
+        self.authenticate(**kwargs)
+        try:
+            yield self
+        finally:
+            self.disconnect()
 
     @staticmethod
     def make_api_url_from(server: str, port: Optional[int] = None) -> str:
