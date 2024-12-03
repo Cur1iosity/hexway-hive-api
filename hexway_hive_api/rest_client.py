@@ -1,15 +1,12 @@
 import json
 from contextlib import contextmanager
-from typing import Optional, Dict, MutableMapping, List, Union, TYPE_CHECKING, Self
+from typing import Optional, Dict, MutableMapping, List, Union, Self, ContextManager
 from uuid import UUID
 
 from .rest import exceptions
 from .rest.enums import ClientState
 from .rest.http_client import HTTPClient
 from .rest.models.project import Project
-
-if TYPE_CHECKING:
-    from typing import ContextManager
 
 
 class RestClient:
