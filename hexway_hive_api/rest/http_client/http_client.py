@@ -43,6 +43,11 @@ class HTTPClient:
          if value is not None and hasattr(self.session, key)]
         return self
 
+    def clear_session(self) -> bool:
+        """Method to clear session headers."""
+        self.session.headers.clear()
+        return True
+
     def get(self, *args, **kwargs) -> Union[Dict, List, bytes]:
         """Send GET request."""
         return self._send(HTTPMethod.GET, *args, **kwargs)
