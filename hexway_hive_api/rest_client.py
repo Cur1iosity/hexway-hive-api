@@ -32,7 +32,7 @@ class RestClient:
 
         self.http_client.update_params(**other)
 
-    def authenticate(self,
+    def connect(self,
                      *,
                      server: Optional[str] = None,
                      api_url: Optional[str] = None,
@@ -40,14 +40,14 @@ class RestClient:
                      password: Optional[str] = None,
                      **other
                      ) -> None:
-        """Authenticate in Hive."""
+        """connect to Hive."""
         if not any([server, self.server]) and not any([api_url, self.api_url]):
             raise exceptions.ServerNotFound()
 
         if not any([username, self.username]) and not any([password, self.__password]):
             raise exceptions.RestConnectionError('You must provide username and password.')
 
-        self.http_client.update_params(**other | {'User-Agent': 'HexwayHiveAPI_Cur1Engine/0.1.5'})
+        self.http_client.update_params(**other)
 
         self.server = server or self.server
         self.api_url = api_url or self.api_url or self.make_api_url_from(self.server)
@@ -79,9 +79,9 @@ class RestClient:
         return True
 
     @contextmanager
-    def connect(self, **kwargs) -> ContextManager[Self]:
+    def connection(self, **kwargs) -> ContextManager[Self]:
         """Context manager for connection."""
-        self.authenticate(**kwargs)
+        self.connect(**kwargs)
         try:
             yield self
         finally:
@@ -127,6 +127,10 @@ class RestClient:
             url=f'{self.api_url}/project/{project_id}/graph/issue_list?offset={offset}&limit={limit}',
             json={})
         return response
+
+    def get_users(self) -> List[Dict]:
+        """Get all users."""
+        return self.http_client.get(f'{self.api_url}/user/')
 
     def update_project(self, project_id: Union[str, UUID], fields: Dict) -> Dict[str, str]:
         """Update project."""
