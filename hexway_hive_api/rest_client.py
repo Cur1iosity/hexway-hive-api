@@ -115,7 +115,7 @@ class RestClient:
 
     def get_projects(self, **params) -> Dict[str, Union[str, Dict]]:
         """Get all projects."""
-        return self.http_client.post(f'{self.api_url}/project/filter', params=params)
+        return self.http_client.post(f'{self.api_url}/project/filter/', params=params, json={})
 
     def get_file(self, project_id: str, file_id: str) -> bytes:
         """Get file from Hive."""
