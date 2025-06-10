@@ -58,3 +58,9 @@ async def main() -> None:
 
 asyncio.run(main())
 ```
+
+### TLS configuration
+
+``AsyncHTTPClient`` accepts an optional ``ssl`` context in its constructor or
+through :meth:`update_params`. This context will be passed to all requests if no
+``ssl`` argument is provided explicitly.
