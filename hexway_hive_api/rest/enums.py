@@ -14,5 +14,5 @@ class Guard(StrEnum):
     """Enumeration of controls."""
     # ClientControl = auto()
     # USER_INPUT = auto()
-    SERVER_PROVIDING = auto()  # Передан ли от пользователя адрес сервера
-    CONNECTION = auto()  # Подключен ли к серверу
+    SERVER_PROVIDING = auto()  # Whether server address was provided by the user
+    CONNECTION = auto()  # Indicates if the client is connected

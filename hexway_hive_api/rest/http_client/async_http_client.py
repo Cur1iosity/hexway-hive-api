@@ -1,7 +1,11 @@
-"""Asynchronous HTTP client built on top of :mod:`aiohttp`."""
+"""Asynchronous HTTP client built on top of :mod:`aiohttp`.
+
+Attributes:
+    session (aiohttp.ClientSession): Session used for all outgoing requests.
+"""
 
 from http import HTTPStatus, HTTPMethod
-from typing import Dict, Self, Union, List, MutableMapping
+from typing import Self, Union, MutableMapping, Any
 
 import aiohttp
 
@@ -18,7 +22,7 @@ class AsyncHTTPClient:
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
         self._proxies: MutableMapping[str, str] = {}
 
-    async def _send(self, method: HTTPMethod, url: str, **kwargs) -> Union[Dict, bytes, List]:
+    async def _send(self, method: HTTPMethod, url: str, **kwargs) -> Union[dict, bytes, list]:
         """Internal helper performing HTTP request and parsing the response."""
 
         proxy = self._proxies.get('https' if url.startswith('https') else 'http')
@@ -56,32 +60,32 @@ class AsyncHTTPClient:
         self.session.headers.clear()
         return True
 
-    async def get(self, *args, **kwargs) -> Union[Dict, List, bytes]:
+    async def get(self, *args, **kwargs) -> Union[dict, list, bytes]:
         """Send HTTP ``GET`` request."""
 
         return await self._send(HTTPMethod.GET, *args, **kwargs)
 
-    async def post(self, *args, **kwargs) -> Union[Dict, List, bytes]:
+    async def post(self, *args, **kwargs) -> Union[dict, list, bytes]:
         """Send HTTP ``POST`` request."""
 
         return await self._send(HTTPMethod.POST, *args, **kwargs)
 
-    async def put(self, *args, **kwargs) -> Dict:
+    async def put(self, *args, **kwargs) -> dict:
         """Send HTTP ``PUT`` request."""
 
         return await self._send(HTTPMethod.PUT, *args, **kwargs)
 
-    async def patch(self, *args, **kwargs) -> Dict:
+    async def patch(self, *args, **kwargs) -> dict:
         """Send HTTP ``PATCH`` request."""
 
         return await self._send(HTTPMethod.PATCH, *args, **kwargs)
 
-    async def delete(self, *args, **kwargs) -> Dict:
+    async def delete(self, *args, **kwargs) -> dict:
         """Send HTTP ``DELETE`` request."""
 
         return await self._send(HTTPMethod.DELETE, *args, **kwargs)
 
-    def add_headers(self, headers: Dict) -> Self:
+    def add_headers(self, headers: dict) -> Self:
         """Inject additional headers into requests session."""
 
         self.session.headers.update(headers)
@@ -100,7 +104,7 @@ class AsyncHTTPClient:
         return self._proxies
 
     @proxies.setter
-    def proxies(self, proxies) -> None:
+    def proxies(self, proxies: dict | None) -> None:
         """Set proxy configuration."""
 
         if not proxies or not isinstance(proxies, dict):
@@ -108,7 +112,7 @@ class AsyncHTTPClient:
         self._proxies.update(proxies)
 
     @property
-    def params(self):
+    def params(self) -> MutableMapping[str, Any]:
         """Return current ``aiohttp`` session parameters."""
 
         return self.session.__dict__

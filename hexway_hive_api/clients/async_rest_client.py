@@ -2,7 +2,7 @@
 
 import json
 from contextlib import asynccontextmanager
-from typing import Optional, Dict, MutableMapping, List, Union, Self, AsyncGenerator
+from typing import Optional, MutableMapping, Union, Self, AsyncGenerator
 from uuid import UUID
 
 from hexway_hive_api.rest import exceptions
@@ -12,14 +12,19 @@ from hexway_hive_api.rest.models.project import Project
 
 
 class AsyncRestClient:
-    """Asynchronous REST client used to communicate with Hive."""
+    """Asynchronous REST client used to communicate with Hive.
+
+    Attributes:
+        http_client (AsyncHTTPClient): HTTP client used for requests.
+        state (ClientState): Current state of the client.
+    """
     def __init__(self,
                  *,
                  server: Optional[str] = None,
                  api_url: Optional[str] = None,
                  username: Optional[str] = None,
                  password: Optional[str] = None,
-                 proxies: Optional[Dict] = None,
+                 proxies: Optional[dict] = None,
                  **other,
                  ) -> None:
         """Initialize asynchronous client instance.
@@ -144,12 +149,12 @@ class AsyncRestClient:
 
         return f'{server.strip("/")}:{port}/api'
 
-    async def get_project(self, project_id: str) -> Dict[str, Union[str, List, Dict]]:
+    async def get_project(self, project_id: str) -> dict[str, Union[str, list, dict]]:
         """Retrieve project information."""
 
         return await self.http_client.get(f'{self.api_url}/project/{project_id}')
 
-    async def get_projects(self, **params) -> Dict[str, Union[str, Dict]]:
+    async def get_projects(self, **params) -> dict[str, Union[str, dict]]:
         """Return list of projects using provided filters."""
 
         return await self.http_client.post(f'{self.api_url}/project/filter/', params=params, json={})
@@ -159,7 +164,7 @@ class AsyncRestClient:
 
         return await self.http_client.get(f'{self.api_url}/project/{project_id}/graph/file/{file_id}')
 
-    async def get_issues(self, project_id: str, offset: int = 0, limit: int = 100) -> Dict[str, str]:
+    async def get_issues(self, project_id: str, offset: int = 0, limit: int = 100) -> dict[str, str]:
         """Retrieve paginated issues list for the given project."""
 
         response = await self.http_client.post(
@@ -167,12 +172,12 @@ class AsyncRestClient:
             json={})
         return response
 
-    async def get_users(self) -> List[Dict]:
+    async def get_users(self) -> list[dict]:
         """Return list of users registered in Hive."""
 
         return await self.http_client.get(f'{self.api_url}/user/')
 
-    async def update_project(self, project_id: Union[str, UUID], fields: Dict) -> Dict[str, str]:
+    async def update_project(self, project_id: Union[str, UUID], fields: dict) -> dict[str, str]:
         """Update project fields while preserving existing ``data`` section."""
 
         project = await self.get_project(project_id)
@@ -183,22 +188,22 @@ class AsyncRestClient:
         files = {k: (None, v) for k, v in merged_project.items()}
         return await self.http_client.put(f'{self.api_url}/project/{project_id}', files=files)
 
-    async def update_issue(self, project_id: Union[str, UUID], issue_id: Union[str, UUID], fields: Dict) -> Dict[str, str]:
+    async def update_issue(self, project_id: Union[str, UUID], issue_id: Union[str, UUID], fields: dict) -> dict[str, str]:
         """Update issue data within a project."""
 
         return await self.http_client.patch(f'{self.api_url}/project/{project_id}/graph/issues/{issue_id}', json=fields)
 
-    async def archive_project(self, project_id: Union[str, UUID]) -> Dict[str, str]:
+    async def archive_project(self, project_id: Union[str, UUID]) -> dict[str, str]:
         """Move project to archive."""
 
         return await self.http_client.put(f'{self.api_url}/project/{project_id}/archive', json={'archived': True})
 
-    async def activate_project(self, project_id: Union[str, UUID]) -> Dict[str, str]:
+    async def activate_project(self, project_id: Union[str, UUID]) -> dict[str, str]:
         """Restore archived project."""
 
         return await self.http_client.put(f'{self.api_url}/project/{project_id}/archive', json={'archived': False})
 
-    async def get_statuses(self) -> List[Dict]:
+    async def get_statuses(self) -> list[dict]:
         """Return available issue statuses."""
 
         return await self.http_client.get(f'{self.api_url}/settings/issues/statuses/')
@@ -210,7 +215,7 @@ class AsyncRestClient:
         return self.http_client.proxies
 
     @proxies.setter
-    def proxies(self, proxies: Dict) -> None:
+    def proxies(self, proxies: dict) -> None:
         """Set proxy configuration for HTTP requests."""
 
         self.http_client.proxies = proxies

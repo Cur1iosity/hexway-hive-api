@@ -2,7 +2,7 @@
 
 import json
 from contextlib import contextmanager
-from typing import Optional, Dict, MutableMapping, List, Union, Self, ContextManager
+from typing import Optional, MutableMapping, Union, Self, ContextManager
 from uuid import UUID
 
 from hexway_hive_api.rest import exceptions
@@ -12,7 +12,12 @@ from hexway_hive_api.rest.models.project import Project
 
 
 class RestClient:
-    """Synchronous REST client for Hive."""
+    """Synchronous REST client for Hive.
+
+    Attributes:
+        http_client (HTTPClient): Underlying HTTP client instance.
+        state (ClientState): Current state of the client.
+    """
     def __init__(self,
                  *,
                  server=None,
@@ -155,7 +160,7 @@ class RestClient:
 
         return f'{server.strip("/")}:{port}/api'
 
-    def get_project(self, project_id: str) -> Dict[str, Union[str, List, Dict]]:
+    def get_project(self, project_id: str) -> dict[str, Union[str, list, dict]]:
         """Retrieve project information.
 
         Parameters
@@ -165,7 +170,7 @@ class RestClient:
         """
         return self.http_client.get(f'{self.api_url}/project/{project_id}')
 
-    def get_projects(self, **params) -> Dict[str, Union[str, Dict]]:
+    def get_projects(self, **params) -> dict[str, Union[str, dict]]:
         """Return list of projects using provided filters."""
         return self.http_client.post(f'{self.api_url}/project/filter/', params=params, json={})
 
@@ -173,18 +178,18 @@ class RestClient:
         """Download raw file from project storage."""
         return self.http_client.get(f'{self.api_url}/project/{project_id}/graph/file/{file_id}')
 
-    def get_issues(self, project_id: str, offset: int = 0, limit: int = 100) -> Dict[str, str]:
+    def get_issues(self, project_id: str, offset: int = 0, limit: int = 100) -> dict[str, str]:
         """Retrieve paginated issues list for the given project."""
         response = self.http_client.post(
             url=f'{self.api_url}/project/{project_id}/graph/issue_list?offset={offset}&limit={limit}',
             json={})
         return response
 
-    def get_users(self) -> List[Dict]:
+    def get_users(self) -> list[dict]:
         """Return list of users registered in Hive."""
         return self.http_client.get(f'{self.api_url}/user/')
 
-    def update_project(self, project_id: Union[str, UUID], fields: Dict) -> Dict[str, str]:
+    def update_project(self, project_id: Union[str, UUID], fields: dict) -> dict[str, str]:
         """Update project fields.
 
         Only fields present in ``fields`` will be updated. Project ``data`` is
@@ -200,19 +205,19 @@ class RestClient:
         files = {k: (None, v) for k, v in merged_project.items()}
         return self.http_client.put(f'{self.api_url}/project/{project_id}', files=files)
 
-    def update_issue(self, project_id: Union[str, UUID], issue_id: Union[str, UUID], fields: Dict) -> Dict[str, str]:
+    def update_issue(self, project_id: Union[str, UUID], issue_id: Union[str, UUID], fields: dict) -> dict[str, str]:
         """Update issue data within a project."""
         return self.http_client.patch(f'{self.api_url}/project/{project_id}/graph/issues/{issue_id}', json=fields)
 
-    def archive_project(self, project_id: Union[str, UUID]) -> Dict[str, str]:
+    def archive_project(self, project_id: Union[str, UUID]) -> dict[str, str]:
         """Move project to archive."""
         return self.http_client.put(f'{self.api_url}/project/{project_id}/archive', json={'archived': True})
 
-    def activate_project(self, project_id: Union[str, UUID]) -> Dict[str, str]:
+    def activate_project(self, project_id: Union[str, UUID]) -> dict[str, str]:
         """Restore archived project."""
         return self.http_client.put(f'{self.api_url}/project/{project_id}/archive', json={'archived': False})
 
-    def get_statuses(self) -> List[Dict]:
+    def get_statuses(self) -> list[dict]:
         """Return available issue statuses."""
         return self.http_client.get(f'{self.api_url}/settings/issues/statuses/')
 
@@ -222,6 +227,6 @@ class RestClient:
         return self.http_client.proxies
 
     @proxies.setter
-    def proxies(self, proxies: Dict) -> None:
+    def proxies(self, proxies: dict) -> None:
         """Set proxy configuration for HTTP requests."""
         self.http_client.proxies = proxies

@@ -1,2 +1,2 @@
-"""Client implementations used to interact with Hive API."""
+"""Client implementations used to interact with the Hive API."""
 

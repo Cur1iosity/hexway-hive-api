@@ -27,11 +27,11 @@ def ErrorHandler(cls) -> Any:
     original_init = cls.__init__
 
     @functools.wraps(original_init)
-    def new_init(self, *args, **kwargs):
+    def new_init(self, *args, **kwargs) -> None:
         original_init(self, *args, **kwargs)
-        # Обернуть все методы экземпляра, кроме __init__
+        # Wrap all methods except ``__init__`` with the decorator
         for attr_name in dir(self):
-            if not attr_name.startswith("__"):  # Игнорируем служебные методы
+            if not attr_name.startswith("__"):  # Skip dunder methods
                 attr_value = getattr(self, attr_name)
                 if callable(attr_value):
                     decorated_attr = method_decorator(attr_value)
