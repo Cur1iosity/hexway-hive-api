@@ -2,10 +2,12 @@
 
 Attributes:
     session (aiohttp.ClientSession): Session used for all outgoing requests.
+    ssl (ssl.SSLContext | None): Default SSL context for requests.
 """
 
 from http import HTTPStatus, HTTPMethod
-from typing import Self, Union, MutableMapping, Any
+from typing import Self, Union, MutableMapping, Any, Optional
+import ssl
 
 import aiohttp
 
@@ -16,18 +18,29 @@ SUCCESSFUL_STATUS_CODES = [status for status in HTTPStatus if 200 <= status < 30
 
 class AsyncHTTPClient:
     """Asynchronous implementation of the HTTP client."""
-    def __init__(self) -> None:
-        """Create ``aiohttp`` session used for all requests."""
+    def __init__(self, *, ssl: Optional[ssl.SSLContext] = None) -> None:
+        """Create ``aiohttp`` session used for all requests.
+
+        Parameters
+        ----------
+        ssl : :class:`ssl.SSLContext` | None
+            Default SSL context applied to all requests.
+        """
 
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
         self._proxies: MutableMapping[str, str] = {}
+        self.ssl = ssl
 
     async def _send(self, method: HTTPMethod, url: str, **kwargs) -> Union[dict, bytes, list]:
-        """Internal helper performing HTTP request and parsing the response."""
+        """Internal helper performing HTTP request and parsing the response.
+
+        The default SSL context is appended to ``kwargs`` if not specified.
+        """
 
         proxy = self._proxies.get('https' if url.startswith('https') else 'http')
         if proxy:
             kwargs.setdefault('proxy', proxy)
+        kwargs.setdefault('ssl', self.ssl)
         try:
             async with self.session.request(method, url, **kwargs) as response:
                 if response.status not in SUCCESSFUL_STATUS_CODES:
@@ -97,8 +110,9 @@ class AsyncHTTPClient:
         return self
 
     def update_params(self, **kwargs) -> Self:
-        """Public wrapper around :meth:`_update_params`."""
-
+        """Update session parameters and store ``ssl`` for later use."""
+        if 'ssl' in kwargs:
+            self.ssl = kwargs['ssl']
         self._update_params(**kwargs)
         return self
 
