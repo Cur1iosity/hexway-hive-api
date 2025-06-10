@@ -4,9 +4,9 @@
 
 # Hexway Hive API
 
-Unofficial flexible library for [HexWay Hive](https://hexway.io/hive/) Rest API.
+Unofficial flexible library for [HexWay Hive](https://hexway.io/hive/) REST API.
 
-#### Tested on HexWay Hive 0.62.8
+#### Tested on HexWay Hive 0.65.6
 
 ## Installation
 ```bash
@@ -14,36 +14,47 @@ pip install hexway-hive-api
 ```
 
 ## Dependencies
-
 - pydantic ~= 2.4
 - requests ~= 2.31.0
+- aiohttp ~= 3.9.0
 
 ## Usage
-### Simple HiveClient
+### Synchronous client
 ```python
 from hexway_hive_api import RestClient
 
 
 def main() -> None:
     auth = {
-        'server': 'https://demohive.hexway.io/',
-        'username': 'someuser',
-        'password': 'somepassword',
-        'proxies': {
-            'http': 'http://127.0.0.1:8080',
-            'https': 'http://127.0.0.1:8080',
-        }
+        "server": "https://demohive.hexway.io/",
+        "username": "someuser",
+        "password": "somepassword",
     }
-    client = RestClient(**auth)
+    with RestClient().connection(**auth) as client:
+        projects = client.get_projects().get("items")
+        client.update_project(project_id=1, fields={"name": "New Project Name"})
 
-    client.authenticate()
-    projects: list = client.get_projects().get('items')
-    
-    
-    client.update_project(project_id=1, fields={'name': 'New Project Name'})
-    
+
 if __name__ == "__main__":
     main()
+```
+
+### Asynchronous client
+```python
+import asyncio
+from hexway_hive_api import AsyncRestClient
 
 
+async def main() -> None:
+    auth = {
+        "server": "https://demohive.hexway.io/",
+        "username": "someuser",
+        "password": "somepassword",
+    }
+    async with AsyncRestClient().connection(**auth) as client:
+        projects = (await client.get_projects()).get("items")
+        await client.update_project(project_id=1, fields={"name": "New Project Name"})
+
+
+asyncio.run(main())
 ```

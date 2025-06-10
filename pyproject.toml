@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hexway-hive-api"
+version = "0.2.0"
+description = "Small wrapper for HexWay Hive API"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+  {name = "@Cur1iosity", email = "Cur1iosity@protonmail.com"}
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+dependencies = [
+  "requests>=2.31.0",
+  "pydantic>=2.4.0",
+  "aiohttp>=3.9.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/Cur1iosity/hexway-hive-api"
+
+[project.optional-dependencies]
+dev = ["pytest"]

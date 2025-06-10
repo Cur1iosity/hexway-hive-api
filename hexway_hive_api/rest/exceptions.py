@@ -1,12 +1,22 @@
-from typing import Dict
+"""Custom exception hierarchy used by the Hive API wrapper."""
+
+
 
 from hexway_hive_api.rest.enums import Guard
 
 
 class HiveRestError(Exception):
-    """Base exception for Hive rest client."""
-    def __init__(self, params: Dict) -> None:
-        """Initialize HiveRestError."""
+    """Exception raised for API errors.
+
+    Attributes:
+        detail (str | None): Detailed error description.
+        status (int | None): HTTP status code returned by the server.
+        title (str | None): Short error title.
+        type (str | None): Error type provided by the server.
+    """
+
+    def __init__(self, params: dict) -> None:
+        """Store fields from the API response."""
         self.detail = params.get('detail')
         self.status = params.get('status')
         self.title = params.get('title')
@@ -18,28 +28,28 @@ class HiveRestError(Exception):
 
 
 class RestConnectionError(Exception):
-    """Exception for connection errors."""
+    """Base exception for connection errors."""
     pass
 
 
 class ClientNotConnected(RestConnectionError):
-    """Exception for client not connected."""
+    """Raised when client operations are attempted without authentication."""
     def __init__(self) -> None:
         """Initialize ClientNotConnected."""
         super().__init__('Client is not connected to server. You must authenticate first.')
 
 
 class ServerNotFound(RestConnectionError):
-    """Exception for server not provided."""
+    """Raised when no server address was supplied."""
     def __init__(self) -> None:
-        """Initialize ServerNotProvided."""
+        """Initialize exception instance."""
         super().__init__(f'You must provide server or api_url.')
 
 
 class IncorrectServerUrl(RestConnectionError):
-    """Exception for incorrect server URL."""
+    """Raised when a server URL cannot be parsed."""
     def __init__(self, message: str = None) -> None:
-        """Initialize IncorrectServerUrl."""
+        """Initialize exception instance."""
         if not message:
             super().__init__('Incorrect server URL.')
         else:
@@ -47,12 +57,12 @@ class IncorrectServerUrl(RestConnectionError):
 
 
 class GuardError(Exception):
-    """Exception for control errors."""
+    """Base exception for guard related errors."""
     pass
 
 
 class GuardIsNotDefined(GuardError):
-    """Exception for control is not defined."""
+    """Raised when an undefined guard name is provided."""
     def __init__(self, guard_name: str = None) -> None:
-        """Initialize ControlIsNotDefined."""
+        """Initialize exception instance."""
         super().__init__(f'Control {guard_name} is not defined. You must provide guard from list: {", ".join(Guard)}.')

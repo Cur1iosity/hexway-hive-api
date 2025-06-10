@@ -1,8 +1,5 @@
-"""
-Purpose of this model is to provide project model for serialization and deserialization project that
-compatible with Hive API PUT method.
-"""
-from typing import Union, Optional, Dict
+"""Pydantic model representing Hive project entities."""
+from typing import Optional, Union, Any
 from uuid import UUID
 
 import pydantic
@@ -16,19 +13,19 @@ class Project(pydantic.BaseModel):
     name: str = pydantic.Field(alias='projectName')
     start_date: str = pydantic.Field(alias='projectStartDate')
     end_date: str = pydantic.Field(alias='projectEndDate')
-    data: Optional[Dict] = pydantic.Field(default=None)
+    data: Optional[dict] = pydantic.Field(default=None)
 
     model_config = pydantic.ConfigDict(populate_by_name=True)
 
     @pydantic.model_validator(mode='before')
-    def preparing(cls, values) -> Dict:
+    def preparing(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Prepare project model before validation."""
         values['projectGroupId'] = values.get('group').get('id')
         return values
 
     @pydantic.model_serializer(when_used='always')
-    def serialize(self) -> Dict:
-        """Serialize project model to hive project json."""
+    def serialize(self) -> dict:
+        """Serialize project model to Hive project JSON."""
         return {
             'projectName': self.name,
             'projectDescription': self.description,
