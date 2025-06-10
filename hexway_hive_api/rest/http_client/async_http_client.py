@@ -1,0 +1,84 @@
+from http import HTTPStatus, HTTPMethod
+from typing import Dict, Self, Union, List, MutableMapping
+
+import aiohttp
+
+from hexway_hive_api.rest.http_client.exceptions import *
+
+SUCCESSFUL_STATUS_CODES = [status for status in HTTPStatus if 200 <= status < 300]
+
+
+class AsyncHTTPClient:
+    """Asynchronous implementation of the HTTP client."""
+    def __init__(self) -> None:
+        self.session: aiohttp.ClientSession = aiohttp.ClientSession()
+        self._proxies: MutableMapping[str, str] = {}
+
+    async def _send(self, method: HTTPMethod, url: str, **kwargs) -> Union[Dict, bytes, List]:
+        proxy = self._proxies.get('https' if url.startswith('https') else 'http')
+        if proxy:
+            kwargs.setdefault('proxy', proxy)
+        try:
+            async with self.session.request(method, url, **kwargs) as response:
+                if response.status not in SUCCESSFUL_STATUS_CODES:
+                    try:
+                        message = await response.json()
+                    except aiohttp.ContentTypeError:
+                        message = await response.text()
+                    raise ClientError(f'Request failed with status code {response.status}\n{message}')
+                try:
+                    return await response.json()
+                except aiohttp.ContentTypeError:
+                    return await response.read()
+        except aiohttp.ClientConnectionError as e:
+            if 'SOCKSHTTPSConnectionPool' in str(e):
+                proxy = self._proxies.get('https')
+                raise SocksProxyError(f'Couldn\'t connect via "{proxy}". Check it.')
+            else:
+                raise ClientConnectionError(e)
+
+    def _update_params(self, **kwargs) -> Self:
+        [setattr(self.session, key, value) for key, value in kwargs.items()
+         if value is not None and hasattr(self.session, key)]
+        return self
+
+    async def clear_session(self) -> bool:
+        self.session.headers.clear()
+        return True
+
+    async def get(self, *args, **kwargs) -> Union[Dict, List, bytes]:
+        return await self._send(HTTPMethod.GET, *args, **kwargs)
+
+    async def post(self, *args, **kwargs) -> Union[Dict, List, bytes]:
+        return await self._send(HTTPMethod.POST, *args, **kwargs)
+
+    async def put(self, *args, **kwargs) -> Dict:
+        return await self._send(HTTPMethod.PUT, *args, **kwargs)
+
+    async def patch(self, *args, **kwargs) -> Dict:
+        return await self._send(HTTPMethod.PATCH, *args, **kwargs)
+
+    async def delete(self, *args, **kwargs) -> Dict:
+        return await self._send(HTTPMethod.DELETE, *args, **kwargs)
+
+    def add_headers(self, headers: Dict) -> Self:
+        self.session.headers.update(headers)
+        return self
+
+    def update_params(self, **kwargs) -> Self:
+        self._update_params(**kwargs)
+        return self
+
+    @property
+    def proxies(self) -> MutableMapping[str, str]:
+        return self._proxies
+
+    @proxies.setter
+    def proxies(self, proxies) -> None:
+        if not proxies or not isinstance(proxies, dict):
+            proxies = {}
+        self._proxies.update(proxies)
+
+    @property
+    def params(self):
+        return self.session.__dict__
