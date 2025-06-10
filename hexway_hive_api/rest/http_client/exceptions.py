@@ -1,3 +1,5 @@
+"""Exceptions raised by HTTP client implementations."""
+
 from typing import Optional
 
 

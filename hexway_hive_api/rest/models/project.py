@@ -1,7 +1,4 @@
-"""
-Purpose of this model is to provide project model for serialization and deserialization project that
-compatible with Hive API PUT method.
-"""
+"""Pydantic model representing Hive project entities."""
 from typing import Union, Optional, Dict
 from uuid import UUID
 

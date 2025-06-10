@@ -1,3 +1,5 @@
+"""Synchronous HTTP client built on top of :mod:`requests`."""
+
 from http import HTTPStatus, HTTPMethod
 from typing import Dict, Self, Union, List, MutableMapping
 

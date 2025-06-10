@@ -1,3 +1,5 @@
+"""Custom exception hierarchy used by the Hive API wrapper."""
+
 from typing import Dict
 
 from hexway_hive_api.rest.enums import Guard

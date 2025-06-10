@@ -1,3 +1,5 @@
+"""Utilities for converting HTTP client errors into library exceptions."""
+
 import functools
 import json
 from typing import Callable, Any
@@ -7,10 +9,10 @@ from hexway_hive_api.rest.http_client.exceptions import ClientError
 
 
 def method_decorator(func) -> Callable:
-    """Decorator for methods."""
+    """Decorate client methods to translate HTTP errors."""
     @functools.wraps(func)
     def wrapper(*args, **kwargs) -> Any:
-        """Wrapper for methods."""
+        """Execute wrapped method and convert :class:`ClientError` exceptions."""
         try:
             result = func(*args, **kwargs)
         except ClientError as e:
@@ -21,7 +23,7 @@ def method_decorator(func) -> Callable:
 
 
 def ErrorHandler(cls) -> Any:
-    """Decorator for classes."""
+    """Class decorator that applies :func:`method_decorator` to all methods."""
     original_init = cls.__init__
 
     @functools.wraps(original_init)

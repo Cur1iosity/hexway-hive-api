@@ -1,3 +1,5 @@
+"""Enumerations describing client states and guard checks."""
+
 from enum import StrEnum, auto
 
 
