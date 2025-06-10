@@ -6,7 +6,7 @@
 
 Unofficial flexible library for [HexWay Hive](https://hexway.io/hive/) Rest API.
 
-#### Tested on HexWay Hive 0.62.8
+#### Tested on HexWay Hive 0.65.6
 
 ## Installation
 ```bash

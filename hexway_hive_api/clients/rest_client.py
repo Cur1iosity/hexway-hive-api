@@ -3,10 +3,10 @@ from contextlib import contextmanager
 from typing import Optional, Dict, MutableMapping, List, Union, Self, ContextManager
 from uuid import UUID
 
-from .rest import exceptions
-from .rest.enums import ClientState
-from .rest.http_client import HTTPClient
-from .rest.models.project import Project
+from hexway_hive_api.rest import exceptions
+from hexway_hive_api.rest.enums import ClientState
+from hexway_hive_api.rest.http_client import HTTPClient
+from hexway_hive_api.rest.models.project import Project
 
 
 class RestClient:
