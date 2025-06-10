@@ -17,3 +17,42 @@ def test_proxies_property() -> None:
 
     import asyncio
     asyncio.run(run())
+
+
+def test_disconnect_closes_session() -> None:
+    """Client session should be closed after disconnect."""
+
+    class DummyResponse:
+        def __init__(self) -> None:
+            self.cookies = {"BSESSIONID": "cookie"}
+
+        async def json(self):
+            return {}
+
+    class DummySession:
+        def __init__(self) -> None:
+            self.headers = {}
+            self.closed = False
+
+        async def post(self, *args, **kwargs):
+            return DummyResponse()
+
+        async def delete(self, *args, **kwargs):
+            return DummyResponse()
+
+        async def close(self):
+            self.closed = True
+
+    async def run() -> None:
+        client = AsyncRestClient()
+        old_session = client.http_client.session
+        client.http_client.session = DummySession()
+        await old_session.close()
+
+        await client.connect(server="http://test", api_url="http://test/api", username="u", password="p")
+        await client.disconnect()
+
+        assert client.http_client.session.closed is True
+
+    import asyncio
+    asyncio.run(run())
