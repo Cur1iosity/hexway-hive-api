@@ -1,7 +1,7 @@
 """Top level package for Hexway Hive API wrapper.
 
-This module exposes high level synchronous and asynchronous REST clients as well
-as data models that can be used to communicate with the Hive API.
+This module exposes the synchronous and asynchronous REST clients alongside
+Pydantic models used to communicate with the Hive API.
 """
 
 from hexway_hive_api.clients.rest_client import RestClient

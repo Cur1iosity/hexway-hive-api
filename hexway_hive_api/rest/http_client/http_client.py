@@ -1,7 +1,11 @@
-"""Synchronous HTTP client built on top of :mod:`requests`."""
+"""Synchronous HTTP client built on top of :mod:`requests`.
+
+Attributes:
+    session (Session): Underlying requests session used for all HTTP calls.
+"""
 
 from http import HTTPStatus, HTTPMethod
-from typing import Dict, Self, Union, List, MutableMapping
+from typing import Self, Union, MutableMapping, Any
 
 import requests.utils
 from requests import Session, Response
@@ -15,7 +19,7 @@ class HTTPClient:
     """Base implementation of the HTTP client."""
     session: Session = Session()
 
-    def _send(self, method: HTTPMethod, *args, **kwargs) -> Union[Dict, bytes]:
+    def _send(self, method: HTTPMethod, *args, **kwargs) -> Union[dict, bytes]:
         """Universal method for sending requests."""
         try:
             response: Response = self.session.request(method, *args, **kwargs)
@@ -50,27 +54,27 @@ class HTTPClient:
         self.session.headers.clear()
         return True
 
-    def get(self, *args, **kwargs) -> Union[Dict, List, bytes]:
+    def get(self, *args, **kwargs) -> Union[dict, list, bytes]:
         """Send GET request."""
         return self._send(HTTPMethod.GET, *args, **kwargs)
 
-    def post(self, *args, **kwargs) -> Union[Dict, List, bytes]:
+    def post(self, *args, **kwargs) -> Union[dict, list, bytes]:
         """Send POST request."""
         return self._send(HTTPMethod.POST, *args, **kwargs)
 
-    def put(self, *args, **kwargs) -> Dict:
+    def put(self, *args, **kwargs) -> dict:
         """Send PUT request."""
         return self._send(HTTPMethod.PUT, *args, **kwargs)
 
-    def patch(self, *args, **kwargs) -> Dict:
+    def patch(self, *args, **kwargs) -> dict:
         """Send PATCH request."""
         return self._send(HTTPMethod.PATCH, *args, **kwargs)
 
-    def delete(self, *args, **kwargs) -> Dict:
+    def delete(self, *args, **kwargs) -> dict:
         """Send DELETE request."""
         return self._send(HTTPMethod.DELETE, *args, **kwargs)
 
-    def add_headers(self, headers: Dict) -> Self:
+    def add_headers(self, headers: dict) -> Self:
         """Method injects headers into session."""
         self.session.headers.update(headers)
         return self
@@ -86,13 +90,13 @@ class HTTPClient:
         return self.session.proxies
 
     @proxies.setter
-    def proxies(self, proxies) -> None:
-        """Method to set session proxies."""
+    def proxies(self, proxies: dict | None) -> None:
+        """Set session proxies."""
         if not proxies and not isinstance(proxies, dict):
             proxies = {}
         self.session.proxies.update(proxies)
 
     @property
-    def params(self):
-        """Method to get session parameters."""
+    def params(self) -> MutableMapping[str, Any]:
+        """Return session parameters."""
         return self.session.__dict__
