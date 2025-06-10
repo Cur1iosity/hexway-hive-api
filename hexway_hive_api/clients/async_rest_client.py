@@ -1,6 +1,7 @@
 """Asynchronous version of the Hive REST client."""
 
 import json
+import ssl
 from contextlib import asynccontextmanager
 from typing import Optional, MutableMapping, Union, Self, AsyncGenerator
 from uuid import UUID
@@ -43,6 +44,8 @@ class AsyncRestClient:
             Optional mapping with proxy configuration.
         other: dict
             Additional parameters forwarded to :class:`aiohttp.ClientSession`.
+            The ``cert`` key may specify a certificate path or ``(cert, key)``
+            tuple for TLS authentication.
         """
 
         self.http_client: AsyncHTTPClient = AsyncHTTPClient()
@@ -54,7 +57,12 @@ class AsyncRestClient:
         self.__password: Optional[str] = password
         self.proxies = proxies
 
+        cert = other.pop('cert', None)
+        self.cert: Optional[Union[str, tuple[str, str]]] = cert
         self.http_client.update_params(**other)
+        if cert:
+            context = self._make_ssl_context(cert)
+            self.http_client.update_params(ssl=context)
 
     async def connect(self,
                       *,
@@ -64,7 +72,10 @@ class AsyncRestClient:
                       password: Optional[str] = None,
                       **other,
                       ) -> None:
-        """Authenticate asynchronously with the Hive server."""
+        """Authenticate asynchronously with the Hive server.
+
+        ``cert`` may be supplied in ``other`` for client TLS configuration.
+        """
 
         if not any([server, self.server]) and not any([api_url, self.api_url]):
             raise exceptions.ServerNotFound()
@@ -72,7 +83,12 @@ class AsyncRestClient:
         if not any([username, self.username]) and not any([password, self.__password]):
             raise exceptions.RestConnectionError('You must provide username and password.')
 
+        cert = other.pop('cert', None) or self.cert
         self.http_client.update_params(**other)
+        if cert:
+            self.cert = cert
+            context = self._make_ssl_context(cert)
+            self.http_client.update_params(ssl=context)
 
         self.server = server or self.server
         self.api_url = api_url or self.api_url or self.make_api_url_from(self.server)
@@ -113,6 +129,17 @@ class AsyncRestClient:
             yield self
         finally:
             await self.disconnect()
+
+    @staticmethod
+    def _make_ssl_context(cert: Union[str, tuple[str, str]]) -> ssl.SSLContext:
+        """Create SSL context from certificate chain."""
+
+        context = ssl.create_default_context()
+        if isinstance(cert, (list, tuple)):
+            context.load_cert_chain(cert[0], cert[1])
+        else:
+            context.load_cert_chain(cert)
+        return context
 
     @staticmethod
     def make_api_url_from(server: str, port: Optional[int] = None) -> str:
