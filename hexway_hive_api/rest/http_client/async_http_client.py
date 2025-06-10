@@ -60,6 +60,11 @@ class AsyncHTTPClient:
         self.session.headers.clear()
         return True
 
+    async def close(self) -> bool:
+        """Close underlying ``aiohttp`` session."""
+        await self.session.close()
+        return True
+
     async def get(self, *args, **kwargs) -> Union[dict, list, bytes]:
         """Send HTTP ``GET`` request."""
 

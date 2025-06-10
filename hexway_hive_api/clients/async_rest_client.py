@@ -101,6 +101,7 @@ class AsyncRestClient:
         await self.http_client.session.delete(f"{self.api_url}/session")
         self.state = ClientState.DISCONNECTED
         await self.http_client.clear_session()
+        await self.http_client.close()
         return True
 
     @asynccontextmanager
