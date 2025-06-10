@@ -1,3 +1,5 @@
+"""Synchronous client used for interacting with the Hive REST API."""
+
 import json
 from contextlib import contextmanager
 from typing import Optional, Dict, MutableMapping, List, Union, Self, ContextManager
@@ -10,7 +12,7 @@ from hexway_hive_api.rest.models.project import Project
 
 
 class RestClient:
-    """Rest client for Hive."""
+    """Synchronous REST client for Hive."""
     def __init__(self,
                  *,
                  server=None,
@@ -20,7 +22,23 @@ class RestClient:
                  proxies=None,
                  **other
                  ) -> None:
-        """Initialize RestClient."""
+        """Create REST client instance.
+
+        Parameters
+        ----------
+        server: str | None
+            Address of the Hive instance.
+        api_url: str | None
+            Full API URL. If not provided it will be generated from ``server``.
+        username: str | None
+            User login name.
+        password: str | None
+            Password for the user.
+        proxies: dict | None
+            Optional mapping with HTTP and HTTPS proxy definitions.
+        other: dict
+            Additional parameters passed directly to :class:`requests.Session`.
+        """
         self.http_client: HTTPClient = HTTPClient()
         self.state: ClientState = ClientState.NOT_CONNECTED
 
@@ -40,7 +58,22 @@ class RestClient:
                      password: Optional[str] = None,
                      **other
                      ) -> None:
-        """connect to Hive."""
+        """Authenticate against the Hive server.
+
+        Parameters
+        ----------
+        server: str | None
+            Server address. If not provided the value from object state will be
+            used.
+        api_url: str | None
+            Explicit API URL. Overrides ``server`` if supplied.
+        username: str | None
+            Login name used for authentication.
+        password: str | None
+            Password for the account.
+        other: dict
+            Additional options passed directly to ``requests.Session``.
+        """
         if not any([server, self.server]) and not any([api_url, self.api_url]):
             raise exceptions.ServerNotFound()
 
@@ -72,7 +105,7 @@ class RestClient:
 
 
     def disconnect(self) -> bool:
-        """Disconnect from Hive."""
+        """Terminate authenticated session with Hive."""
         self.http_client.session.delete(f"{self.api_url}/session")
         self.state = ClientState.DISCONNECTED
         self.http_client.clear_session()
@@ -80,7 +113,7 @@ class RestClient:
 
     @contextmanager
     def connection(self, **kwargs) -> ContextManager[Self]:
-        """Context manager for connection."""
+        """Yield connected client instance and ensure cleanup."""
         self.connect(**kwargs)
         try:
             yield self
@@ -89,7 +122,20 @@ class RestClient:
 
     @staticmethod
     def make_api_url_from(server: str, port: Optional[int] = None) -> str:
-        """Create api URL from server and port."""
+        """Build API URL from server string.
+
+        Parameters
+        ----------
+        server: str
+            Server address in ``protocol://host[:port]`` format.
+        port: int | None
+            Optional port override.
+
+        Returns
+        -------
+        str
+            Full API endpoint URL.
+        """
         try:
             proto, hostname, *str_port = server.split(':')
         except ValueError:
@@ -110,30 +156,40 @@ class RestClient:
         return f'{server.strip("/")}:{port}/api'
 
     def get_project(self, project_id: str) -> Dict[str, Union[str, List, Dict]]:
-        """Get project by id."""
+        """Retrieve project information.
+
+        Parameters
+        ----------
+        project_id: str
+            Identifier of the project to retrieve.
+        """
         return self.http_client.get(f'{self.api_url}/project/{project_id}')
 
     def get_projects(self, **params) -> Dict[str, Union[str, Dict]]:
-        """Get all projects."""
+        """Return list of projects using provided filters."""
         return self.http_client.post(f'{self.api_url}/project/filter/', params=params, json={})
 
     def get_file(self, project_id: str, file_id: str) -> bytes:
-        """Get file from Hive."""
+        """Download raw file from project storage."""
         return self.http_client.get(f'{self.api_url}/project/{project_id}/graph/file/{file_id}')
 
     def get_issues(self, project_id: str, offset: int = 0, limit: int = 100) -> Dict[str, str]:
-        """Get issues from Hive."""
+        """Retrieve paginated issues list for the given project."""
         response = self.http_client.post(
             url=f'{self.api_url}/project/{project_id}/graph/issue_list?offset={offset}&limit={limit}',
             json={})
         return response
 
     def get_users(self) -> List[Dict]:
-        """Get all users."""
+        """Return list of users registered in Hive."""
         return self.http_client.get(f'{self.api_url}/user/')
 
     def update_project(self, project_id: Union[str, UUID], fields: Dict) -> Dict[str, str]:
-        """Update project."""
+        """Update project fields.
+
+        Only fields present in ``fields`` will be updated. Project ``data`` is
+        merged to avoid removing existing values.
+        """
         project = self.get_project(project_id)
         # We need to merge data from project and fields to safely update project
         # We also need model to adapt data because of its specific serialized structure ¯\_(ツ)_/¯
@@ -145,27 +201,27 @@ class RestClient:
         return self.http_client.put(f'{self.api_url}/project/{project_id}', files=files)
 
     def update_issue(self, project_id: Union[str, UUID], issue_id: Union[str, UUID], fields: Dict) -> Dict[str, str]:
-        """Update issue."""
+        """Update issue data within a project."""
         return self.http_client.patch(f'{self.api_url}/project/{project_id}/graph/issues/{issue_id}', json=fields)
 
     def archive_project(self, project_id: Union[str, UUID]) -> Dict[str, str]:
-        """Send to archive project."""
+        """Move project to archive."""
         return self.http_client.put(f'{self.api_url}/project/{project_id}/archive', json={'archived': True})
 
     def activate_project(self, project_id: Union[str, UUID]) -> Dict[str, str]:
-        """Take from archive project."""
+        """Restore archived project."""
         return self.http_client.put(f'{self.api_url}/project/{project_id}/archive', json={'archived': False})
 
     def get_statuses(self) -> List[Dict]:
-        """Get all statuses."""
+        """Return available issue statuses."""
         return self.http_client.get(f'{self.api_url}/settings/issues/statuses/')
 
     @property
     def proxies(self) -> MutableMapping[str, str]:
-        """Get proxies."""
+        """Return proxy configuration."""
         return self.http_client.proxies
 
     @proxies.setter
     def proxies(self, proxies: Dict) -> None:
-        """Set proxies."""
+        """Set proxy configuration for HTTP requests."""
         self.http_client.proxies = proxies

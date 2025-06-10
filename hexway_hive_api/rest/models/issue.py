@@ -1,3 +1,5 @@
+"""Pydantic model for Hive issues."""
+
 from typing import Union, Optional, Dict, List
 from uuid import UUID
 
