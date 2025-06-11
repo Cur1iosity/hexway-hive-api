@@ -35,9 +35,13 @@ def test_disconnect_closes_session() -> None:
             self.closed = False
 
         async def post(self, *args, **kwargs):
+            if self.closed:
+                raise RuntimeError("Session is closed")
             return DummyResponse()
 
         async def delete(self, *args, **kwargs):
+            if self.closed:
+                raise RuntimeError("Session is closed")
             return DummyResponse()
 
         async def close(self):
@@ -46,13 +50,69 @@ def test_disconnect_closes_session() -> None:
     async def run() -> None:
         client = AsyncRestClient()
         old_session = client.http_client.session
-        client.http_client.session = DummySession()
+        dummy = DummySession()
+        client.http_client.session = dummy
         await old_session.close()
 
         await client.connect(server="http://test", api_url="http://test/api", username="u", password="p")
         await client.disconnect()
 
-        assert client.http_client.session.closed is True
+        assert dummy.closed is True
+        assert client.http_client.session is not dummy
+        assert client.http_client.session.closed is False
+
+    import asyncio
+    asyncio.run(run())
+
+
+def test_connect_after_disconnect() -> None:
+    """Client should be able to reconnect after disconnect."""
+
+    class DummyResponse:
+        def __init__(self) -> None:
+            self.cookies = {"BSESSIONID": "cookie"}
+
+        async def json(self):
+            return {}
+
+    class DummySession:
+        def __init__(self) -> None:
+            self.headers = {}
+            self.closed = False
+
+        async def post(self, *args, **kwargs):
+            if self.closed:
+                raise RuntimeError("Session is closed")
+            return DummyResponse()
+
+        async def delete(self, *args, **kwargs):
+            if self.closed:
+                raise RuntimeError("Session is closed")
+            return DummyResponse()
+
+        async def close(self):
+            self.closed = True
+
+    async def run() -> None:
+        client = AsyncRestClient()
+        old_session = client.http_client.session
+        dummy1 = DummySession()
+        client.http_client.session = dummy1
+        await old_session.close()
+
+        await client.connect(server="http://test", api_url="http://test/api", username="u", password="p")
+        await client.disconnect()
+
+        new_real_session = client.http_client.session
+        dummy2 = DummySession()
+        client.http_client.session = dummy2
+        await new_real_session.close()
+
+        await client.connect(server="http://test", api_url="http://test/api", username="u", password="p")
+
+        assert dummy2.closed is False
+        assert client.http_client.session.headers.get("Cookie") == "BSESSIONID=cookie"
+        await client.http_client.session.close()
 
     import asyncio
     asyncio.run(run())
