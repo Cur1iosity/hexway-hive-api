@@ -1,4 +1,7 @@
 from hexway_hive_api.clients.async_rest_client import AsyncRestClient
+from hexway_hive_api.rest import exceptions
+import aiohttp
+import pytest
 
 
 def test_make_api_url_from() -> None:
@@ -14,6 +17,36 @@ def test_proxies_property() -> None:
         client.proxies = {"http": "http://proxy"}
         assert client.proxies.get("http") == "http://proxy"
         await client.http_client.clear_session()
+
+    import asyncio
+    asyncio.run(run())
+
+
+def test_connect_handles_aiohttp_error() -> None:
+    """Client should close session and raise ``RestConnectionError`` on aiohttp failure."""
+
+    class DummySession:
+        def __init__(self) -> None:
+            self.headers = {}
+            self.closed = False
+
+        async def post(self, *args, **kwargs):
+            raise aiohttp.ClientConnectionError("boom")
+
+        async def close(self):
+            self.closed = True
+
+    async def run() -> None:
+        client = AsyncRestClient()
+        old_session = client.http_client.session
+        dummy = DummySession()
+        client.http_client.session = dummy
+        await old_session.close()
+
+        with pytest.raises(exceptions.RestConnectionError):
+            await client.connect(server="http://test", api_url="http://test/api", username="u", password="p")
+
+        assert dummy.closed is True
 
     import asyncio
     asyncio.run(run())
