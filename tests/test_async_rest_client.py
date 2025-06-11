@@ -98,6 +98,50 @@ def test_disconnect_closes_session() -> None:
     asyncio.run(run())
 
 
+def test_disconnect_handles_server_error() -> None:
+    """Disconnect should recreate session even if server is already disconnected."""
+
+    class DummyResponse:
+        def __init__(self) -> None:
+            self.cookies = {"BSESSIONID": "cookie"}
+
+        async def json(self):
+            return {}
+
+    class DummySession:
+        def __init__(self) -> None:
+            self.headers = {}
+            self.closed = False
+
+        async def post(self, *args, **kwargs):
+            if self.closed:
+                raise RuntimeError("Session is closed")
+            return DummyResponse()
+
+        async def delete(self, *args, **kwargs):
+            raise aiohttp.ServerDisconnectedError()
+
+        async def close(self):
+            self.closed = True
+
+    async def run() -> None:
+        client = AsyncRestClient()
+        old_session = client.http_client.session
+        dummy = DummySession()
+        client.http_client.session = dummy
+        await old_session.close()
+
+        await client.connect(server="http://test", api_url="http://test/api", username="u", password="p")
+        await client.disconnect()
+
+        assert dummy.closed is True
+        assert client.http_client.session is not dummy
+        assert client.http_client.session.closed is False
+
+    import asyncio
+    asyncio.run(run())
+
+
 def test_connect_after_disconnect() -> None:
     """Client should be able to reconnect after disconnect."""
 

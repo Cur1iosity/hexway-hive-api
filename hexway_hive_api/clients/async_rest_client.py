@@ -130,14 +130,19 @@ class AsyncRestClient:
 
     async def disconnect(self) -> bool:
         """Close connection and clean up client session."""
-        await self.http_client.session.delete(f"{self.api_url}/session")
-        self.state = ClientState.DISCONNECTED
-        await self.http_client.clear_session()
-        proxies = self.http_client.proxies
-        ssl_context = self.http_client.ssl
-        await self.http_client.close()
-        self.http_client = AsyncHTTPClient(ssl=ssl_context)
-        self.http_client.proxies = proxies
+        try:
+            await self.http_client.session.delete(f"{self.api_url}/session")
+        except aiohttp.ClientError:
+            # connection may already be closed by the server
+            pass
+        finally:
+            self.state = ClientState.DISCONNECTED
+            await self.http_client.clear_session()
+            proxies = self.http_client.proxies
+            ssl_context = self.http_client.ssl
+            await self.http_client.close()
+            self.http_client = AsyncHTTPClient(ssl=ssl_context)
+            self.http_client.proxies = proxies
         return True
 
     @asynccontextmanager
