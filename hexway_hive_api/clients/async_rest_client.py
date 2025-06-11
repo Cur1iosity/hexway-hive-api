@@ -99,10 +99,14 @@ class AsyncRestClient:
         if '@' not in username:
             username = f'{username}@ro.ot'
 
-        response = await self.http_client.session.post(f"{self.api_url}/session", json={
-            'userLogin': username,
-            'userPassword': password,
-        })
+        response = await self.http_client.session.post(
+            f"{self.api_url}/session",
+            json={
+                'userLogin': username,
+                'userPassword': password,
+            },
+            ssl=self.http_client.ssl,
+        )
 
         cookie = response.cookies.get('BSESSIONID')
         if not cookie:
