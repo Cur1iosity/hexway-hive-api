@@ -2,6 +2,8 @@
 
 import json
 import ssl
+
+import aiohttp
 from contextlib import asynccontextmanager
 from typing import Optional, MutableMapping, Union, Self, AsyncGenerator
 from uuid import UUID
@@ -106,14 +108,18 @@ class AsyncRestClient:
         if '@' not in username:
             username = f'{username}@ro.ot'
 
-        response = await self.http_client.session.post(
-            f"{self.api_url}/session",
-            json={
-                'userLogin': username,
-                'userPassword': password,
-            },
-            ssl=self.http_client.ssl,
-        )
+        try:
+            response = await self.http_client.session.post(
+                f"{self.api_url}/session",
+                json={
+                    'userLogin': username,
+                    'userPassword': password,
+                },
+                ssl=self.http_client.ssl,
+            )
+        except aiohttp.ClientError as e:
+            await self.http_client.close()
+            raise exceptions.RestConnectionError(f'Failed to connect: {e}') from e
 
         cookie = response.cookies.get('BSESSIONID')
         if not cookie:
