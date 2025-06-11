@@ -91,8 +91,8 @@ def test_disconnect_closes_session() -> None:
         await client.disconnect()
 
         assert dummy.closed is True
-        assert client.http_client.session is not dummy
-        assert client.http_client.session.closed is False
+        assert client.http_client.session is dummy
+        assert client.http_client.session.closed is True
 
     import asyncio
     asyncio.run(run())
@@ -135,8 +135,8 @@ def test_disconnect_handles_server_error() -> None:
         await client.disconnect()
 
         assert dummy.closed is True
-        assert client.http_client.session is not dummy
-        assert client.http_client.session.closed is False
+        assert client.http_client.session is dummy
+        assert client.http_client.session.closed is True
 
     import asyncio
     asyncio.run(run())
@@ -180,10 +180,12 @@ def test_connect_after_disconnect() -> None:
         await client.connect(server="http://test", api_url="http://test/api", username="u", password="p")
         await client.disconnect()
 
-        new_real_session = client.http_client.session
+        assert dummy1.closed is True
+        assert client.http_client.session is dummy1
+        assert client.http_client.session.closed is True
+
         dummy2 = DummySession()
         client.http_client.session = dummy2
-        await new_real_session.close()
 
         await client.connect(server="http://test", api_url="http://test/api", username="u", password="p")
 
