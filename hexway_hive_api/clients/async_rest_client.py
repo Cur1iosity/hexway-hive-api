@@ -141,8 +141,8 @@ class AsyncRestClient:
             proxies = self.http_client.proxies
             ssl_context = self.http_client.ssl
             await self.http_client.close()
-            self.http_client = AsyncHTTPClient(ssl=ssl_context)
             self.http_client.proxies = proxies
+            self.http_client.ssl = ssl_context
         return True
 
     @asynccontextmanager
