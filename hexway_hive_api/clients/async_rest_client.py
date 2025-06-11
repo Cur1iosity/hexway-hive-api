@@ -90,6 +90,13 @@ class AsyncRestClient:
             context = self._make_ssl_context(cert)
             self.http_client.update_params(ssl=context)
 
+        if self.http_client.session.closed:
+            proxies = self.http_client.proxies
+            ssl_context = self.http_client.ssl
+            await self.http_client.close()
+            self.http_client = AsyncHTTPClient(ssl=ssl_context)
+            self.http_client.proxies = proxies
+
         self.server = server or self.server
         self.api_url = api_url or self.api_url or self.make_api_url_from(self.server)
 
@@ -117,11 +124,14 @@ class AsyncRestClient:
 
     async def disconnect(self) -> bool:
         """Close connection and clean up client session."""
-
         await self.http_client.session.delete(f"{self.api_url}/session")
         self.state = ClientState.DISCONNECTED
         await self.http_client.clear_session()
+        proxies = self.http_client.proxies
+        ssl_context = self.http_client.ssl
         await self.http_client.close()
+        self.http_client = AsyncHTTPClient(ssl=ssl_context)
+        self.http_client.proxies = proxies
         return True
 
     @asynccontextmanager
