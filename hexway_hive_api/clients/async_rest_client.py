@@ -2,6 +2,8 @@
 
 import json
 import ssl
+
+import aiohttp
 from contextlib import asynccontextmanager
 from typing import Optional, MutableMapping, Union, Self, AsyncGenerator
 from uuid import UUID
@@ -90,6 +92,13 @@ class AsyncRestClient:
             context = self._make_ssl_context(cert)
             self.http_client.update_params(ssl=context)
 
+        if self.http_client.session.closed:
+            proxies = self.http_client.proxies
+            ssl_context = self.http_client.ssl
+            await self.http_client.close()
+            self.http_client = AsyncHTTPClient(ssl=ssl_context)
+            self.http_client.proxies = proxies
+
         self.server = server or self.server
         self.api_url = api_url or self.api_url or self.make_api_url_from(self.server)
 
@@ -99,10 +108,18 @@ class AsyncRestClient:
         if '@' not in username:
             username = f'{username}@ro.ot'
 
-        response = await self.http_client.session.post(f"{self.api_url}/session", json={
-            'userLogin': username,
-            'userPassword': password,
-        })
+        try:
+            response = await self.http_client.session.post(
+                f"{self.api_url}/session",
+                json={
+                    'userLogin': username,
+                    'userPassword': password,
+                },
+                ssl=self.http_client.ssl,
+            )
+        except aiohttp.ClientError as e:
+            await self.http_client.close()
+            raise exceptions.RestConnectionError(f'Failed to connect: {e}') from e
 
         cookie = response.cookies.get('BSESSIONID')
         if not cookie:
@@ -113,11 +130,19 @@ class AsyncRestClient:
 
     async def disconnect(self) -> bool:
         """Close connection and clean up client session."""
-
-        await self.http_client.session.delete(f"{self.api_url}/session")
-        self.state = ClientState.DISCONNECTED
-        await self.http_client.clear_session()
-        await self.http_client.close()
+        try:
+            await self.http_client.session.delete(f"{self.api_url}/session")
+        except aiohttp.ClientError:
+            # connection may already be closed by the server
+            pass
+        finally:
+            self.state = ClientState.DISCONNECTED
+            await self.http_client.clear_session()
+            proxies = self.http_client.proxies
+            ssl_context = self.http_client.ssl
+            await self.http_client.close()
+            self.http_client.proxies = proxies
+            self.http_client.ssl = ssl_context
         return True
 
     @asynccontextmanager
