@@ -66,4 +66,5 @@ through :meth:`update_params`. This context will be passed to all requests if no
 ``ssl`` argument is provided explicitly. Verification of server certificates can
 be toggled via the ``verify_ssl`` flag or ``verify`` parameter in
 :meth:`update_params` and individual request methods. Disabling verification will
-still keep TLS encryption enabled.
+still keep TLS encryption enabled. ``AsyncRestClient.connect`` also respects the
+``verify`` / ``verify_ssl`` options when establishing the session.
