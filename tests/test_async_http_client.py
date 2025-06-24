@@ -60,3 +60,26 @@ def test_send_uses_default_ssl():
         await client.close()
 
     asyncio.run(run())
+
+
+def test_update_params_sets_verify_ssl():
+    async def run() -> None:
+        client = AsyncHTTPClient()
+        client.update_params(verify=False)
+        assert client.verify_ssl is False
+        await client.close()
+
+    asyncio.run(run())
+
+
+def test_send_respects_verify_flag():
+    async def run() -> None:
+        client = AsyncHTTPClient()
+        client.session = DummySession()
+        await client.get("https://example.com", verify=False)
+        context = client.session.kwargs.get("ssl")
+        assert isinstance(context, ssl.SSLContext)
+        assert context.verify_mode == ssl.CERT_NONE
+        await client.close()
+
+    asyncio.run(run())

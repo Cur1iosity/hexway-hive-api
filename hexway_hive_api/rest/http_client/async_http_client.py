@@ -18,18 +18,21 @@ SUCCESSFUL_STATUS_CODES = [status for status in HTTPStatus if 200 <= status < 30
 
 class AsyncHTTPClient:
     """Asynchronous implementation of the HTTP client."""
-    def __init__(self, *, ssl: Optional[ssl.SSLContext] = None) -> None:
+    def __init__(self, *, ssl: Optional[ssl.SSLContext] = None, verify_ssl: bool = True) -> None:
         """Create ``aiohttp`` session used for all requests.
 
         Parameters
         ----------
         ssl : :class:`ssl.SSLContext` | None
             Default SSL context applied to all requests.
+        verify_ssl : bool, optional
+            Flag controlling TLS certificate verification. ``True`` by default.
         """
 
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
         self._proxies: MutableMapping[str, str] = {}
         self.ssl = ssl
+        self.verify_ssl = verify_ssl
 
     async def _send(self, method: HTTPMethod, url: str, **kwargs) -> Union[dict, bytes, list]:
         """Internal helper performing HTTP request and parsing the response.
@@ -40,7 +43,20 @@ class AsyncHTTPClient:
         proxy = self._proxies.get('https' if url.startswith('https') else 'http')
         if proxy:
             kwargs.setdefault('proxy', proxy)
-        kwargs.setdefault('ssl', self.ssl)
+
+        verify = kwargs.pop("verify", kwargs.pop("verify_ssl", self.verify_ssl))
+
+        if not verify:
+            base_context = kwargs.get("ssl") or self.ssl
+            if base_context is not None:
+                context = ssl.SSLContext(base_context.protocol)
+            else:
+                context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            kwargs.setdefault("ssl", context)
+        else:
+            kwargs.setdefault("ssl", self.ssl)
         try:
             async with self.session.request(method, url, **kwargs) as response:
                 if response.status not in SUCCESSFUL_STATUS_CODES:
@@ -111,8 +127,12 @@ class AsyncHTTPClient:
 
     def update_params(self, **kwargs) -> Self:
         """Update session parameters and store ``ssl`` for later use."""
-        if 'ssl' in kwargs:
-            self.ssl = kwargs['ssl']
+        if "ssl" in kwargs:
+            self.ssl = kwargs["ssl"]
+        if "verify" in kwargs or "verify_ssl" in kwargs:
+            self.verify_ssl = bool(kwargs.get("verify", kwargs.get("verify_ssl")))
+            kwargs.pop("verify", None)
+            kwargs.pop("verify_ssl", None)
         self._update_params(**kwargs)
         return self
 
