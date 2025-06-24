@@ -86,6 +86,7 @@ class AsyncRestClient:
             raise exceptions.RestConnectionError('You must provide username and password.')
 
         cert = other.pop('cert', None) or self.cert
+        verify = other.get("verify", other.get("verify_ssl", self.http_client.verify_ssl))
         self.http_client.update_params(**other)
         if cert:
             self.cert = cert
@@ -109,13 +110,21 @@ class AsyncRestClient:
             username = f'{username}@ro.ot'
 
         try:
+            ssl_context = self.http_client.ssl
+            if verify is False:
+                if ssl_context is not None:
+                    ssl_context = ssl.SSLContext(ssl_context.protocol)
+                else:
+                    ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
             response = await self.http_client.session.post(
                 f"{self.api_url}/session",
                 json={
                     'userLogin': username,
                     'userPassword': password,
                 },
-                ssl=self.http_client.ssl,
+                ssl=ssl_context,
             )
         except aiohttp.ClientError as e:
             await self.http_client.close()

@@ -1,4 +1,13 @@
-from hexway_hive_api.clients.async_rest_client import AsyncRestClient
+import os
+import sys
+import importlib.util
+local_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+module_path = os.path.join(local_path, 'hexway_hive_api', 'clients', 'async_rest_client.py')
+spec = importlib.util.spec_from_file_location('hexway_hive_api.clients.async_rest_client', module_path)
+async_rest_client = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(async_rest_client)
+sys.modules['hexway_hive_api.clients.async_rest_client'] = async_rest_client
+AsyncRestClient = async_rest_client.AsyncRestClient
 from hexway_hive_api.rest import exceptions
 import aiohttp
 import pytest
@@ -17,6 +26,48 @@ def test_proxies_property() -> None:
         client.proxies = {"http": "http://proxy"}
         assert client.proxies.get("http") == "http://proxy"
         await client.http_client.clear_session()
+
+    import asyncio
+    asyncio.run(run())
+
+
+def test_connect_respects_verify_false() -> None:
+    """SSL context should disable verification when verify is False."""
+    import ssl
+
+    class DummyResponse:
+        def __init__(self) -> None:
+            self.cookies = {"BSESSIONID": "cookie"}
+
+    class DummySession:
+        def __init__(self) -> None:
+            self.headers = {}
+            self.captured = None
+            self.closed = False
+
+        async def post(self, *args, **kwargs):
+            self.captured = kwargs.get("ssl")
+            return DummyResponse()
+
+        async def close(self):
+            self.closed = True
+
+    async def run() -> None:
+        client = AsyncRestClient()
+        old_session = client.http_client.session
+        client.http_client.session = DummySession()
+        await old_session.close()
+        await client.connect(
+            server="https://hive.local",
+            api_url="https://hive.local/api",
+            username="u",
+            password="p",
+            verify=False,
+        )
+        context = client.http_client.session.captured
+        assert isinstance(context, ssl.SSLContext)
+        assert context.verify_mode == ssl.CERT_NONE
+        await client.http_client.session.close()
 
     import asyncio
     asyncio.run(run())
