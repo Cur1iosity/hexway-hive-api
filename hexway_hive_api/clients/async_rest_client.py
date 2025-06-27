@@ -216,6 +216,16 @@ class AsyncRestClient:
 
         return await self.http_client.get(f'{self.api_url}/project/{project_id}')
 
+    async def get_project_pages_metadata(self, project_id: str) -> list[dict]:
+        """Retrieve list of wiki pages for the given project."""
+
+        return await self.http_client.get(f'{self.api_url}/project/{project_id}/description')
+
+    async def get_project_page_metadata(self, project_id: str, node_id: str) -> dict[str, Union[str, list, dict]]:
+        """Retrieve wiki page metadata for the given project."""
+
+        return await self.http_client.get(f'{self.api_url}/project/{project_id}/graph/nodes/{node_id}')
+
     async def get_projects(self, **params) -> dict[str, Union[str, dict]]:
         """Return list of projects using provided filters."""
 
