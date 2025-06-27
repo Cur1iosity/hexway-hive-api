@@ -134,7 +134,7 @@ class AsyncRestClient:
             await self.http_client.close()
             raise exceptions.RestConnectionError(f'Failed to connect: {e}') from e
 
-        cookie = response.cookies.get('BSESSIONID')
+        cookie = response.cookies.get('BSESSIONID').value if response.cookies else None
         if not cookie:
             raise exceptions.RestConnectionError('Could not get authentication cookie. Something wrong with credentials or server.')
 
