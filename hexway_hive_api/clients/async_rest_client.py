@@ -4,6 +4,7 @@ import json
 import ssl
 
 import aiohttp
+import logging
 from contextlib import asynccontextmanager
 from typing import Optional, MutableMapping, Union, Self, AsyncGenerator
 from uuid import UUID
@@ -11,8 +12,11 @@ from uuid import UUID
 from hexway_hive_api.rest import exceptions
 from hexway_hive_api.rest.enums import ClientState
 from hexway_hive_api.rest.http_client.async_http_client import AsyncHTTPClient
+from hexway_hive_api.rest.http_client.exceptions import ClientError
 from hexway_hive_api.rest.models.project import Project
 
+
+logger = logging.getLogger('AsyncRestClient')
 
 class AsyncRestClient:
     """Asynchronous REST client used to communicate with Hive.
@@ -246,8 +250,13 @@ class AsyncRestClient:
 
     async def get_users(self) -> list[dict]:
         """Return list of users registered in Hive."""
+        try:
+            return await self.http_client.get(f'{self.api_url}/user/')
+        except ClientError as e:
+            logger.error(f'Failed to fetch users: {e}')
+            logger.error(f'Details: {e.details if hasattr(e, "details") else "No details available"}')
+            raise exceptions.RestConnectionError(f'Failed to fetch users: {e}') from e
 
-        return await self.http_client.get(f'{self.api_url}/user/')
 
     async def update_project(self, project_id: Union[str, UUID], fields: dict) -> dict[str, str]:
         """Update project fields while preserving existing ``data`` section."""

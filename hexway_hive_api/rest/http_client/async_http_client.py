@@ -8,11 +8,14 @@ Attributes:
 from http import HTTPStatus, HTTPMethod
 from typing import Self, Union, MutableMapping, Any, Optional
 import ssl
+import logging
 
 import aiohttp
 
 from hexway_hive_api.rest.http_client.exceptions import *
 
+
+logger = logging.getLogger("AsyncHTTPClient")
 SUCCESSFUL_STATUS_CODES = [status for status in HTTPStatus if 200 <= status < 300]
 
 
@@ -64,7 +67,13 @@ class AsyncHTTPClient:
                         message = await response.json()
                     except aiohttp.ContentTypeError:
                         message = await response.text()
-                    raise ClientError(f'Request failed with status code {response.status}\n{message}')
+                    raise ClientError(f'Request failed with status code {response.status}\n{message}', details={
+                        'url': url,
+                        'method': method,
+                        'status': response.status,
+                        'headers': dict(response.headers),
+                        'content': message
+                    })
                 try:
                     return await response.json()
                 except aiohttp.ContentTypeError:
