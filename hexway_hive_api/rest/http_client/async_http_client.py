@@ -129,9 +129,13 @@ class AsyncHTTPClient:
         return await self._send(HTTPMethod.DELETE, *args, **kwargs)
 
     def add_headers(self, headers: dict) -> Self:
-        """Inject additional headers into requests session."""
+        """Inject additional headers into requests session without duplicates."""
 
-        self.session.headers.update(headers)
+        for key, value in headers.items():
+            if value is None:
+                self.session.headers.pop(key, None)
+            else:
+                self.session.headers[key] = value
         return self
 
     def update_params(self, **kwargs) -> Self:
