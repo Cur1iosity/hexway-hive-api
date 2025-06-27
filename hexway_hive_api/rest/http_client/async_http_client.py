@@ -71,7 +71,7 @@ class AsyncHTTPClient:
                         'url': url,
                         'method': method,
                         'status': response.status,
-                        'headers': dict(response.headers),
+                        'headers': response.request_info.headers,
                         'content': message
                     })
                 try:
