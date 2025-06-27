@@ -32,10 +32,13 @@ class AsyncHTTPClient:
             Flag controlling TLS certificate verification. ``True`` by default.
         """
 
-        self.session: aiohttp.ClientSession = aiohttp.ClientSession()
+        self.session: aiohttp.ClientSession = aiohttp.ClientSession(
+            skip_auto_headers={"Accept-Encoding"}
+        )
         self._proxies: MutableMapping[str, str] = {}
         self.ssl = ssl
         self.verify_ssl = verify_ssl
+        self._cookie_header: Optional[str] = None
 
     async def _send(self, method: HTTPMethod, url: str, **kwargs) -> Union[dict, bytes, list]:
         """Internal helper performing HTTP request and parsing the response.
@@ -46,6 +49,14 @@ class AsyncHTTPClient:
         proxy = self._proxies.get('https' if url.startswith('https') else 'http')
         if proxy:
             kwargs.setdefault('proxy', proxy)
+
+        headers = dict(kwargs.get("headers", {}))
+        if self._cookie_header and "Cookie" not in headers:
+            headers["Cookie"] = self._cookie_header
+        if "Accept-Encoding" in headers:
+            values = [v.strip() for v in headers["Accept-Encoding"].split(',')]
+            headers["Accept-Encoding"] = ", ".join(dict.fromkeys(values))
+        kwargs["headers"] = headers
 
         verify = kwargs.pop("verify", kwargs.pop("verify_ssl", self.verify_ssl))
 
@@ -96,6 +107,7 @@ class AsyncHTTPClient:
         """Remove all custom headers from the session."""
 
         self.session.headers.clear()
+        self._cookie_header = None
         return True
 
     async def close(self) -> bool:
@@ -128,15 +140,6 @@ class AsyncHTTPClient:
 
         return await self._send(HTTPMethod.DELETE, *args, **kwargs)
 
-    def add_headers(self, headers: dict) -> Self:
-        """Inject additional headers into requests session without duplicates."""
-
-        for key, value in headers.items():
-            if value is None:
-                self.session.headers.pop(key, None)
-            else:
-                self.session.headers[key] = value
-        return self
 
     def update_params(self, **kwargs) -> Self:
         """Update session parameters and store ``ssl`` for later use."""

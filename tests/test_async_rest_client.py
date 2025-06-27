@@ -246,7 +246,7 @@ def test_connect_after_disconnect() -> None:
         await client.connect(server="http://test", api_url="http://test/api", username="u", password="p")
 
         assert dummy2.closed is False
-        assert client.http_client.session.headers.get("Cookie") == "BSESSIONID=cookie"
+        assert client.http_client._cookie_header == "BSESSIONID=cookie"
         await client.http_client.session.close()
 
     import asyncio
