@@ -75,8 +75,12 @@ class HTTPClient:
         return self._send(HTTPMethod.DELETE, *args, **kwargs)
 
     def add_headers(self, headers: dict) -> Self:
-        """Method injects headers into session."""
-        self.session.headers.update(headers)
+        """Merge provided headers into the session without duplicates."""
+        for key, value in headers.items():
+            if value is None:
+                self.session.headers.pop(key, None)
+            else:
+                self.session.headers[key] = value
         return self
 
     def update_params(self, **kwargs) -> Self:
