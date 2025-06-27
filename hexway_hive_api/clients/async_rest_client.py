@@ -137,8 +137,6 @@ class AsyncRestClient:
         cookie = response.cookies.get('BSESSIONID').value if response.cookies else None
         if not cookie:
             raise exceptions.RestConnectionError('Could not get authentication cookie. Something wrong with credentials or server.')
-
-        self.http_client._cookie_header = f'BSESSIONID={cookie}'
         self.state = ClientState.CONNECTED
 
     async def disconnect(self) -> bool:

@@ -38,7 +38,6 @@ class AsyncHTTPClient:
         self._proxies: MutableMapping[str, str] = {}
         self.ssl = ssl
         self.verify_ssl = verify_ssl
-        self._cookie_header: Optional[str] = None
 
     async def _send(self, method: HTTPMethod, url: str, **kwargs) -> Union[dict, bytes, list]:
         """Internal helper performing HTTP request and parsing the response.
@@ -51,8 +50,6 @@ class AsyncHTTPClient:
             kwargs.setdefault('proxy', proxy)
 
         headers = dict(kwargs.get("headers", {}))
-        if self._cookie_header and "Cookie" not in headers:
-            headers["Cookie"] = self._cookie_header
         if "Accept-Encoding" in headers:
             values = [v.strip() for v in headers["Accept-Encoding"].split(',')]
             headers["Accept-Encoding"] = ", ".join(dict.fromkeys(values))
@@ -107,7 +104,6 @@ class AsyncHTTPClient:
         """Remove all custom headers from the session."""
 
         self.session.headers.clear()
-        self._cookie_header = None
         return True
 
     async def close(self) -> bool:
