@@ -13,6 +13,11 @@ import aiohttp
 import pytest
 
 
+class DummyCookie:
+    def __init__(self, value: str = "cookie") -> None:
+        self.value = value
+
+
 def test_make_api_url_from() -> None:
     """Ensure API URL is built correctly from server string."""
     url = AsyncRestClient.make_api_url_from('https://hive.local')
@@ -37,7 +42,7 @@ def test_connect_respects_verify_false() -> None:
 
     class DummyResponse:
         def __init__(self) -> None:
-            self.cookies = {"BSESSIONID": "cookie"}
+            self.cookies = {"BSESSIONID": DummyCookie()}
 
     class DummySession:
         def __init__(self) -> None:
@@ -108,7 +113,7 @@ def test_disconnect_closes_session() -> None:
 
     class DummyResponse:
         def __init__(self) -> None:
-            self.cookies = {"BSESSIONID": "cookie"}
+            self.cookies = {"BSESSIONID": DummyCookie()}
 
         async def json(self):
             return {}
@@ -154,7 +159,7 @@ def test_disconnect_handles_server_error() -> None:
 
     class DummyResponse:
         def __init__(self) -> None:
-            self.cookies = {"BSESSIONID": "cookie"}
+            self.cookies = {"BSESSIONID": DummyCookie()}
 
         async def json(self):
             return {}
@@ -198,7 +203,7 @@ def test_connect_after_disconnect() -> None:
 
     class DummyResponse:
         def __init__(self) -> None:
-            self.cookies = {"BSESSIONID": "cookie"}
+            self.cookies = {"BSESSIONID": DummyCookie()}
 
         async def json(self):
             return {}
@@ -262,7 +267,7 @@ def test_connect_uses_ssl_context(monkeypatch) -> None:
 
         class DummyResponse:
             def __init__(self) -> None:
-                self.cookies = {"BSESSIONID": "cookie"}
+                self.cookies = {"BSESSIONID": DummyCookie()}
 
         class DummySession:
             def __init__(self) -> None:
