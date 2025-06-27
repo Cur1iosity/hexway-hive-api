@@ -33,7 +33,7 @@ class AsyncHTTPClient:
         """
 
         self.session: aiohttp.ClientSession = aiohttp.ClientSession(
-            skip_auto_headers={"Accept-Encoding"}
+            skip_auto_headers={"Accept-Encoding", "User-Agent"}
         )
         self._proxies: MutableMapping[str, str] = {}
         self.ssl = ssl
